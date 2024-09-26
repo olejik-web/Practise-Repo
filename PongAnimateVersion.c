@@ -1,8 +1,10 @@
-﻿#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <math.h>
+#include <termios.h>
+#include <unistd.h>
+#include <ctype.h>
 
 int get_min(int a, int b) {
     int value = a;
@@ -142,7 +144,7 @@ void print_left_indent(int left_indent) {
 
 void print_down_indent(int down_indent) {
     for (int i = 0; i < down_indent; i++) {
-        printf("\n");
+        printf("\r\n");
     }
 }
 
@@ -168,7 +170,7 @@ void print_game_score(int first_value, int second_value, int left_indent) {
         for (int j = 0; j < get_min(10000, sym_cnt); j++) {
             printf("%c", game_score_buf[i][j]);
         }
-        printf("\n");
+        printf("\r\n");
     }
 
 }
@@ -214,13 +216,13 @@ void print_game_field(char game_field[][80], int y_ceils_rocket1[], int y_ceils_
         for (int j = 0; j < width; j++) {
             printf("%c", game_field[i][j]);
         }
-        printf("\n");
+        printf("\r\n");
     }
 }
 
 void clear_screan() {
     for (int i = 0; i < 10; i++) {
-        printf("\n\n\n\n\n\n\n\n\n\n");
+        printf("\r\n\n\n\n\n\n\n\n\n\n");
     }
 }
 
@@ -326,8 +328,30 @@ void print_congratulations(int winner, int first_value, int second_value) {
     print_down_indent(6);
 }
 
+struct termios orig_termios;
+
+void disableRawModule() {
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+}
+
+void enableRawMode() {
+    tcgetattr(STDIN_FILENO, &orig_termios);
+    atexit(disableRawModule);
+
+    struct termios raw = orig_termios;
+    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+    raw.c_oflag &= ~(OPOST);
+    raw.c_cflag |= (CS8);
+    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 1;
+
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+}
+
 int main()
 {
+    enableRawMode();
     int first_value, second_value;
     first_value = 0;
     second_value = 0;
@@ -341,14 +365,14 @@ int main()
     int win_value = 21;
     int winner = 3;
     while (1) {
+        char event = 'w';
+        read(STDIN_FILENO, &event, 1);
         clear_screan();
         print_game_field(game_field, y_ceils_rocket1, y_ceils_rocket2, ball_x, ball_y);
         print_down_indent(1);
         print_game_score(first_value, second_value, left_indent);
         print_down_indent(4);
-        char event[100];
-        scanf("%s", event);
-        execute_event(y_ceils_rocket1, y_ceils_rocket2, event[0]); //event[0]
+        execute_event(y_ceils_rocket1, y_ceils_rocket2, event);
         int ball_side = 3;
         move_ball(game_field, &ball_x, &ball_y, move_vector, &ball_side);
         edit_play_score(&first_value, &second_value, ball_side);
@@ -356,9 +380,18 @@ int main()
         if (winner < 3) {
             break;
         }
-        /* for (int i = 0; i < 60000000; i++) {
+        for (int i = 0; i < 20000000; i++) {
             // int k = 1;
+        }
+        // event = 'q';
+        /* char c = '\0';
+        read(STDIN_FILENO, &c, 1);
+        if (iscntrl(c)) {
+            printf("%d\r\n", c);
+        } else {
+            printf("%d ('%c')\r\n", c, c);
         }*/
+        // if (event == 'q') break;
     }
     print_congratulations(winner, first_value, second_value);
     return 0;

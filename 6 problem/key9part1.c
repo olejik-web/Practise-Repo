@@ -2,7 +2,7 @@
 
 #define NMAX 10
 
-/* int have_evans(int buffer[], int length) {
+int have_evans(int buffer[], int length) {
 	int value = 0;
 	for (int i = 0; i < length; i++) {
 		if (buffer[i] % 2 == 0) {
@@ -52,6 +52,20 @@ void find_numbers(int buffer[], int buffer_length, int* numbers_length, int numb
 	}
 }
 
+int sum_numbers(int *buffer, int length)
+{
+	int sum = 0;
+	
+	for (int i = 0; i < length; i++)
+	{
+		if (buffer[i] % 2 == 0)
+		{
+			sum = sum + buffer[i];
+		}
+	}
+	return sum;
+}
+
 int main()
 {
 
@@ -71,17 +85,3 @@ int main()
 		output(numbers, cnt);
 	}
 }
-
-int sum_numbers(int *buffer, int length)
-{
-	int sum = 0;
-	
-	for (int i = 0; i < length; i++)
-	{
-		if (buffer[i] % 2 == 0)
-		{
-			sum = sum + buffer[i];
-		}
-	}
-	return sum;
-}*/
